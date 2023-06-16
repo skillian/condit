@@ -2,10 +2,9 @@ using System.Linq.Expressions;
 
 namespace Condit.Sql;
 
-interface IQuery
+public interface IQuery
 {
-	IAsyncConnection AsyncConnection { get; }
-	Expression? GetFilter();
+	Expression? Filter { get; }
 }
 
 static class QueryExtension
@@ -18,48 +17,36 @@ interface IFilter
 	Expression Expression { get; }
 }
 
+
+
 abstract class Query<T>
-	: IAsyncEnumerable<T>
-	, IFilter<T>
+	: Condit.IFilter
+	, IQuery
 {
+	Expression? IQuery.Filter => GetFilter();
 	public IAsyncEnumerable<T> Filter(Expression<Func<T, bool>> filterExpression)
 		=> new FilterQuery<T>(this, filterExpression);
-
-	public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-	{
-		var queryBuilder = new Builder<T>(this);
-
-		return queryBuilder.GetAsyncEnumerator(cancellationToken);
-	}
 
 	object Condit.IFilter.Filter(Expression filterExpression)
 		=> Filter((Expression<Func<T, bool>>)filterExpression);
 
-	class Builder : IAsyncEnumerable<T>
-	{
-		readonly Query<T> query;
-		readonly ExpressionBuilder expressionBuilder;
-		public Builder(Query<T> query)
-		{
-			this.query = query;
-			expressionBuilder = new ExpressionBuilder(
-				query.AsyncConnection.CreateAsyncCommand()
-			);
-		}
-	}
+	protected abstract Expression? GetFilter();
 }
 
-class ConnectionQuery<T>
+class DatabaseQuery<T>
 	: Query<T>
 	, IQuery
 {
-	readonly IAsyncConnection asyncConnection;
-	IAsyncConnection IQuery.AsyncConnection => asyncConnection;
-	Expression? IQuery.GetFilter() => default;
-
-	public ConnectionQuery(IAsyncConnection asyncConnection)
+	readonly DatabaseContext databaseContext;
+	public DatabaseQuery(DatabaseContext databaseContext)
 	{
-		this.asyncConnection = asyncConnection ?? throw new ArgumentNullException(nameof(asyncConnection));
+		this.databaseContext = databaseContext;
+	}
+	protected override Expression? GetFilter() => default;
+
+	public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+	{
+		var queryBuilder = new QueryBuilder<T>()
 	}
 }
 
@@ -68,28 +55,23 @@ abstract class QueryQuery<T>
 	, IQuery
 {
 	protected readonly Query<T> source;
-
-	IAsyncConnection IQuery.AsyncConnection
-		=> (
-			Functions.Walk(this, x => x.source as QueryQuery<T>)
-				.OfType<ConnectionQuery<T>>()
-				.FirstOrDefault()
-					?? throw new Exception($"query has no {nameof(ConnectionQuery<T>)}")
-		).AsIQuery().AsyncConnection;
-
-	Expression? IQuery.GetFilter()
-		=> Functions.Walk(this, x => x.source as QueryQuery<T>)
-			.OfType<IFilter>()
-			.Select(x => x.Expression)
-			.Aggregate(Expression.And);
-
 	protected QueryQuery(Query<T> source)
 	{
 		this.source = source;
 	}
+
+	protected override Expression? GetFilter()
+		=> Functions.Walk(this, x => x.source as QueryQuery<T>)
+			.OfType<IFilter>()
+			.FirstOrDefault()?.Expression;
+
+	public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+	{
+		
+	}
 }
 
-class FilterQuery<T>
+sealed class FilterQuery<T>
 	: QueryQuery<T>
 	, IFilter
 {

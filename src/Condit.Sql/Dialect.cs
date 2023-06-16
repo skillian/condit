@@ -2,52 +2,34 @@ namespace Condit.Sql;
 
 public interface IDialect
 {
-	DialectFlags DialectFlags { get; }
 	(char Start, char End) QuoteChars { get;}
 }
 
-public struct DialectFlags
+public abstract class QueryBuilder
 {
-	const string TopDescription = "Uses \"TOP (n)\" to constrain the number of results in SELECT statements, or affected rows in DELETE and UPDATE statements.";
-	[System.ComponentModel.DataAnnotations.Display(
-		Name = nameof(Top), Description = TopDescription
-	)]
-	public static readonly DialectFlag Top = new DialectFlag(1, nameof(Top), TopDescription);
-
-	readonly System.Numerics.BigInteger value;
-	public DialectFlags(IEnumerable<DialectFlag> dialectFlags)
+	public virtual ValueTask AppendSelectAsync(System.Text.StringBuilder stringBuilder, IQuery query, CancellationToken cancellationToken = default)
+		=> Append(stringBuilder, "SELECT");
+	public virtual ValueTask AppendFromAsync(System.Text.StringBuilder stringBuilder, IQuery query, CancellationToken cancellationToken = default)
+		=> Append(stringBuilder, "FROM");
+	public virtual ValueTask AppendWhereAsync(System.Text.StringBuilder stringBuilder, IQuery query, CancellationToken cancellationToken = default)
+		=> Append(stringBuilder, "WHERE");
+	public virtual ValueTask AppendOrderByAsync(System.Text.StringBuilder stringBuilder, IQuery query, CancellationToken cancellationToken = default)
+		=> Append(stringBuilder, "ORDER BY");
+	ValueTask Append(System.Text.StringBuilder stringBuilder, string what)
 	{
-		foreach (var dialectFlag in dialectFlags)
-			value |= System.Numerics.BigInteger.Pow(
-				System.Numerics.BigInteger.One,
-				checked((int)dialectFlag.BitPosition)
-			);
+		stringBuilder.Append(what);
+		return ValueTask.CompletedTask;
 	}
-	private DialectFlags(System.Numerics.BigInteger value)
-	{
-		this.value = value;
-	}
-
-	public static implicit operator DialectFlags(DialectFlag dialectFlag)
-		=> new DialectFlags(new [] { dialectFlag });
-
-	public static DialectFlags operator|(DialectFlags dialectFlags, DialectFlag dialectFlag)
-		=> new DialectFlags(dialectFlags.value | System.Numerics.BigInteger.Pow(
-			System.Numerics.BigInteger.One,
-			checked((int)dialectFlag.BitPosition)
-		));
 }
 
-public struct DialectFlag
+public abstract class QueryBuilder<TDialect>
+	: QueryBuilder
+		where TDialect : IDialect
 {
-	public readonly ulong BitPosition;
-	public readonly string Name;
-	public readonly string Description;
+	protected TDialect Dialect { get; }
 
-	internal DialectFlag(ulong bitPosition, string name, string description)
+	protected QueryBuilder(TDialect dialect)
 	{
-		BitPosition = bitPosition;
-		Name = name;
-		Description = description;
+		Dialect = dialect;
 	}
 }
