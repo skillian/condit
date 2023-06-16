@@ -193,7 +193,7 @@ public class Reflect<TInstance> : Reflect
 				{
 					var param = System.Linq.Expressions.Expression.Parameter(typeof(TInstance));
 
-					return System.Linq.Expressions.Expression.Lambda<Func<TInstance, bool>>(
+					return System.Linq.Expressions.Expression.Lambda<Func<TInstance?, bool>>(
 						System.Linq.Expressions.Expression.MakeMemberAccess(
 							param,
 							typeof(Nullable<>)
