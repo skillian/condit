@@ -42,6 +42,7 @@ class DatabaseQuery<T>
 	{
 		this.databaseContext = databaseContext;
 	}
+
 	protected override Expression? GetFilter() => default;
 
 	public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
