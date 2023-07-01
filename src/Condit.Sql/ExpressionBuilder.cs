@@ -93,8 +93,8 @@ class ExpressionBuilder
 				ExpressionType.Subtract => " - ",
 				ExpressionType.Multiply => " * ",
 				ExpressionType.Divide => " / ",
-				ExpressionType.And => " AND ",
-				ExpressionType.Or => " OR ",
+				ExpressionType.And or ExpressionType.AndAlso => " AND ",
+				ExpressionType.Or or ExpressionType.OrElse => " OR ",
 				_ => throw new Exception($"Unsupported binary operator: {binary.NodeType}")
 			};
 
