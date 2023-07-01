@@ -38,7 +38,7 @@ public class ReflectTests
         Assert.That(
             longAttribute,
             Is.Not.TypeOf<IMutableAttribute>(),
-            $"{nameof(Class1Property)}.{nameof(Class1Property.Property)} shoult not be mutable"
+            $"{nameof(Class1Property)}.{nameof(Class1Property.Property)} should not be mutable"
         );
     }
 
@@ -93,7 +93,7 @@ public class ReflectTests
         Assert.That(
             dateTimeAttribute,
             Is.Not.TypeOf<IMutableAttribute>(),
-            $"{nameof(Class1Field)}.{nameof(Class1Field.Field)} shoult not be mutable"
+            $"{nameof(Class1Field)}.{nameof(Class1Field.Field)} should not be mutable"
         );
     }
 }
