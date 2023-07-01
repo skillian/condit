@@ -2,7 +2,7 @@
 
 public interface IAsyncConnection
 {
-	IDialect Dialect { get; }
+	IDatabase Database { get; }
 	IDriverInfo DriverInfo { get; }
 	IAsyncCommand CreateAsyncCommand();
 }

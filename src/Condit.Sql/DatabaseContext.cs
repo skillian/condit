@@ -5,6 +5,13 @@ public interface IQueryable
 	IAsyncEnumerable<T> Query<T>();
 }
 
+public interface IDatabase
+	: IQueryable
+{
+	IDialect Dialect { get; }
+	ValueTask SaveAsync(IAsyncEnumerable<object> records, CancellationToken cancellationToken = default);
+}
+
 public sealed class DatabaseContext
 	: IQueryable
 {
