@@ -70,7 +70,7 @@ public class Reflect<TInstance> : Reflect
 				untypedAttributes.Count
 			);
 
-			foreach (var (index, untypedAttribute) in untypedAttributes.Enumerate())
+			foreach (var (untypedAttribute, index) in untypedAttributes.Enumerate())
 				typedAttributes.SetValue(untypedAttribute, index);
 
 			return (IReadOnlyList<IAttributeOf<TInstance>>)typedAttributes;

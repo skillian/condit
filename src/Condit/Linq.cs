@@ -7,7 +7,7 @@ internal static partial class Functions
 		=> source ?? Enumerable.Empty<T>();
 
 	public static IEnumerable<IndexValuePair<TValue>> Enumerate<TValue>(this IEnumerable<TValue> source)
-		=> source.EmptyIfNull().Select((x, i) => IndexValuePair.Create(i, x));
+		=> source.EmptyIfNull().Select(IndexValuePair.Create);
 
 	public static IEnumerable<T> Walk<T>(T? value, Func<T, T?> nextSelector, Func<T?, bool>? continuePredicate = default)
 	{
@@ -25,24 +25,23 @@ internal static partial class Functions
 
 struct IndexValuePair
 {
-	public static IndexValuePair<T> Create<T>(int index, T value)
-		=> new IndexValuePair<T>(index, value);
+	public static IndexValuePair<T> Create<T>(T value, int index)
+		=> new IndexValuePair<T>(value, index);
 }
 
 struct IndexValuePair<TValue>
 {
-	public readonly int Index;
 	public readonly TValue Value;
-
-	public IndexValuePair(int index, TValue value)
+	public readonly int Index;
+	public IndexValuePair(TValue value, int index)
 	{
-		Index = index;
 		Value = value;
+		Index = index;
 	}
 
-	public void Deconstruct(out int index, out TValue value)
+	public void Deconstruct(out TValue value, out int index)
 	{
-		index = Index;
 		value = Value;
+		index = Index;
 	}
 }
