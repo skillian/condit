@@ -2,10 +2,6 @@ namespace Condit;
 
 internal static partial class Functions
 {
-	public static IAsyncEnumerable<object?> AsObjectAsyncEnumerable<T>(this IAsyncEnumerable<T> source)
-		=> (source as IAsyncEnumerable<object?>)
-			?? new ObjectAsyncEnumerable<T>(source);
-
 	[return: System.Diagnostics.CodeAnalysis.NotNull]
 	public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source)
 		=> source ?? Enumerable.Empty<T>();
@@ -48,34 +44,5 @@ struct IndexValuePair<TValue>
 	{
 		index = Index;
 		value = Value;
-	}
-}
-
-public struct ObjectAsyncEnumerable<T> : IAsyncEnumerable<object?>
-{
-	readonly IAsyncEnumerable<T> source;
-	public ObjectAsyncEnumerable(IAsyncEnumerable<T> source)
-	{
-		this.source = source;
-	}
-
-	public IAsyncEnumerator<object?> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-		=> new Enumerator(source.GetAsyncEnumerator(cancellationToken));
-
-	public struct Enumerator : IAsyncEnumerator<object?>
-	{
-		public IAsyncEnumerator<T> source;
-		public Enumerator(IAsyncEnumerator<T> source)
-		{
-			this.source = source;
-		}
-
-		public object? Current => source.Current;
-
-		public ValueTask DisposeAsync()
-			=> source.DisposeAsync();
-
-		public ValueTask<bool> MoveNextAsync()
-			=> source.MoveNextAsync();
 	}
 }
